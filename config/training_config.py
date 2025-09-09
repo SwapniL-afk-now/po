@@ -11,7 +11,7 @@ class TrainingConfig:
     # Model
     model_name: str = "Qwen/Qwen2.5-3B-Instruct"
     num_responses_per_query: int = 3
-    max_new_tokens: int = 2048
+    max_new_tokens: int = 1024
     
     # LoRA
     lora_r: int = 32
@@ -33,7 +33,7 @@ class TrainingConfig:
     kl_penalty: float = 0.0
     
     # Optimization
-    learning_rate: float = 2e-4
+    learning_rate: float = 1e-4
     weight_decay: float = 0.01
     adam_beta1: float = 0.9
     adam_beta2: float = 0.999
@@ -50,8 +50,8 @@ class TrainingConfig:
     
     # Training
     num_epochs: int = 2
-    per_device_train_batch_size: int = 1  # Per GPU batch size
-    gradient_accumulation_steps: int = 4
+    per_device_train_batch_size: int = 3  # Per GPU batch size
+    gradient_accumulation_steps: int = 1
     checkpoint_every_n_steps: int = 10
     max_checkpoints_to_keep: int = 2
     eval_every_n_steps: int = 50
