@@ -58,7 +58,7 @@ def main():
     
     if num_gpus == 2:
         batch_size = 1
-        gradient_accumulation_steps = 4
+        gradient_accumulation_steps = 1
     else:
         batch_size = 1
         gradient_accumulation_steps = 8
@@ -72,9 +72,9 @@ def main():
         "num_epochs": "2",  # Reduced for testing
         "learning_rate": "1e-4",
         "sample_size": "100",  # Start with smaller dataset for testing
-        "checkpoint_every_n_steps": "10",  # Save less frequently
-        "num_responses": "2",  # Reduce responses per query for memory
-        "max_new_tokens": "512",  # Reduce max tokens for memory
+        "checkpoint_every_n_steps": "1",  # Save less frequently
+        "num_responses": "3",  # Reduce responses per query for memory
+        "max_new_tokens": "1024",  # Reduce max tokens for memory
     }
 
     print(f"--> Training configuration:")
