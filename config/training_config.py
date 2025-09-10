@@ -10,12 +10,12 @@ class TrainingConfig:
     
     # Model
     model_name: str = "Qwen/Qwen2.5-3B-Instruct"
-    num_responses_per_query: int = 3
-    max_new_tokens: int = 1024
+    num_responses_per_query: int = 2  # Reduced for memory
+    max_new_tokens: int = 512  # Reduced for memory
     
     # LoRA
-    lora_r: int = 32
-    lora_alpha: int = 64
+    lora_r: int = 16  # Reduced for stability
+    lora_alpha: int = 32  # Reduced for stability
     lora_dropout: float = 0.1
     target_modules: List[str] = field(default_factory=lambda: [
         "q_proj", "v_proj", "k_proj", "o_proj", 
@@ -30,7 +30,7 @@ class TrainingConfig:
     f_max: float = 3.0
     tau: float = 0.2
     epsilon: float = 1e-8
-    kl_penalty: float = 0.0
+    kl_penalty: float = 0.01  # Small KL penalty for stability
     
     # Optimization
     learning_rate: float = 1e-4
@@ -42,7 +42,7 @@ class TrainingConfig:
     
     # Learning Rate Scheduler
     lr_scheduler_type: str = "cosine_warmup"
-    warmup_steps: int = 50
+    warmup_steps: int = 10  # Reduced for testing
     min_lr: float = 1e-6
     t_max: int = 100
     step_size: int = 30
@@ -50,8 +50,8 @@ class TrainingConfig:
     
     # Training
     num_epochs: int = 2
-    per_device_train_batch_size: int = 3  # Per GPU batch size
-    gradient_accumulation_steps: int = 1
+    per_device_train_batch_size: int = 1  # Keep small for memory
+    gradient_accumulation_steps: int = 4  # Will be overridden by command line
     checkpoint_every_n_steps: int = 10
     max_checkpoints_to_keep: int = 2
     eval_every_n_steps: int = 50
@@ -60,8 +60,8 @@ class TrainingConfig:
     # Dataset
     dataset_name: str = "openai/gsm8k"
     dataset_split: str = "train"
-    sample_size: int = 1000
-    num_workers: int = 4
+    sample_size: int = 100  # Small for testing
+    num_workers: int = 0  # Set to 0 to avoid multiprocessing issues with DeepSpeed
     
     # Paths
     output_dir: str = "outputs/agrpo_deepspeed"
@@ -72,10 +72,10 @@ class TrainingConfig:
     seed: int = 42
     fp16: bool = True
     bf16: bool = False
-    gradient_checkpointing: bool = True
+    gradient_checkpointing: bool = False  # Disable for now to avoid issues
     
     # Resume
-    resume_from_checkpoint: bool = True
+    resume_from_checkpoint: bool = False  # Disable for testing
     checkpoint_path: str = None
     
     # Logging
