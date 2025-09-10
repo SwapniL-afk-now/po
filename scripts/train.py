@@ -21,9 +21,9 @@ def parse_args():
     # Model arguments
     parser.add_argument("--model_name", type=str, default="Qwen/Qwen2.5-3B-Instruct",
                        help="Model name or path")
-    parser.add_argument("--num_responses", type=int, default=3,
+    parser.add_argument("--num_responses", type=int, default=2,
                        help="Number of responses per query")
-    parser.add_argument("--max_new_tokens", type=int, default=2048,
+    parser.add_argument("--max_new_tokens", type=int, default=512,
                        help="Maximum new tokens to generate")
     
     # Training arguments
@@ -33,11 +33,11 @@ def parse_args():
                        help="Batch size per device")
     parser.add_argument("--gradient_accumulation_steps", type=int, default=4,
                        help="Gradient accumulation steps")
-    parser.add_argument("--learning_rate", type=float, default=2e-4,
+    parser.add_argument("--learning_rate", type=float, default=1e-4,
                        help="Learning rate")
     
     # Dataset arguments
-    parser.add_argument("--sample_size", type=int, default=1000,
+    parser.add_argument("--sample_size", type=int, default=100,
                        help="Number of samples to use from dataset")
     
     # Output arguments
@@ -58,6 +58,8 @@ def parse_args():
     # Resume arguments
     parser.add_argument("--resume", action="store_true",
                        help="Resume from checkpoint")
+    parser.add_argument("--no-resume", action="store_false", dest="resume",
+                       help="Don't resume from checkpoint")
     parser.add_argument("--checkpoint_path", type=str, default=None,
                        help="Specific checkpoint to resume from")
     
@@ -105,6 +107,8 @@ def main():
         use_wandb=args.use_wandb,
         wandb_project=args.wandb_project,
         local_rank=args.local_rank,
+        gradient_checkpointing=False,  # Disable for stability
+        num_workers=0,  # Disable for DeepSpeed compatibility
     )
     
     # Log configuration
