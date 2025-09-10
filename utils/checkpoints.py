@@ -25,34 +25,42 @@ class CheckpointManager:
         metadata: Dict,
         step: int
     ):
-        """Save a training checkpoint"""
+        """Save a training checkpoint - simplified for LoRA adapters"""
         checkpoint_path = os.path.join(self.checkpoint_dir, f"checkpoint-{step}")
         
-        # Save model with DeepSpeed
-        if self.accelerator.distributed_type == "DEEPSPEED":
-            # DeepSpeed handles model saving
-            self.accelerator.save_state(checkpoint_path)
-        else:
-            # Standard saving
+        # For DeepSpeed with LoRA, we save the LoRA adapters separately
+        # to avoid the NCCL timeout issues with full model saves
+        if self.accelerator.is_main_process:
             os.makedirs(checkpoint_path, exist_ok=True)
             
-            # Save model
-            unwrapped_model = self.accelerator.unwrap_model(model)
-            unwrapped_model.save_pretrained(checkpoint_path)
+            # Save LoRA adapters only (much smaller than full model)
+            try:
+                unwrapped_model = self.accelerator.unwrap_model(model)
+                if hasattr(unwrapped_model, 'save_pretrained'):
+                    unwrapped_model.save_pretrained(checkpoint_path)
+                    logger.info(f"LoRA adapters saved to {checkpoint_path}")
+            except Exception as e:
+                logger.error(f"Failed to save model adapters: {e}")
             
-            # Save optimizer and scheduler states
-            torch.save({
-                'optimizer_state_dict': optimizer.state_dict(),
-                'scheduler_state_dict': scheduler.state_dict() if scheduler else None,
-            }, os.path.join(checkpoint_path, "training_state.pt"))
+            # Save optimizer and scheduler states locally (not with DeepSpeed)
+            try:
+                torch.save({
+                    'optimizer_state_dict': optimizer.state_dict(),
+                    'scheduler_state_dict': scheduler.state_dict() if scheduler else None,
+                }, os.path.join(checkpoint_path, "training_state.pt"))
+            except Exception as e:
+                logger.error(f"Failed to save optimizer state: {e}")
+            
+            # Save metadata
+            torch.save(metadata, os.path.join(checkpoint_path, "metadata.pt"))
+            
+            logger.info(f"Checkpoint saved at step {step}")
+            
+            # Clean up old checkpoints
+            self._cleanup_old_checkpoints()
         
-        # Save metadata
-        torch.save(metadata, os.path.join(checkpoint_path, "metadata.pt"))
-        
-        logger.info(f"Checkpoint saved at step {step}")
-        
-        # Clean up old checkpoints
-        self._cleanup_old_checkpoints()
+        # Ensure all processes wait for checkpoint to complete
+        self.accelerator.wait_for_everyone()
     
     def load_latest_checkpoint(self) -> Optional[Dict]:
         """Load the latest checkpoint"""
